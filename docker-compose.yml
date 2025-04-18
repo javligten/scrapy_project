@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: scrapy_db
+    ports:
+      - "5432:5432"
+    networks:
+      - scrapy_network
+
+  scrapy_project:
+    build: .
+    command: scrapy crawl property_spider
+    depends_on:
+      - db
+    networks:
+      - scrapy_network
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URI=postgresql://postgres:password@db:5432/scrapy_db
+
+networks:
+  scrapy_network:
+    driver: bridge
