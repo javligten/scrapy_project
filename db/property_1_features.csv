@@ -1,13 +1,13 @@
 property_id,feature_name,feature_value
+1,Huurprijs,€ 2650
 1,Woningoppervlakte,112 m²
-1,Huurprijs,€ 2.650
-1,Servicekosten,€ 0
-1,Status,8-3-2025
-1,Borgsom,€ 0
-1,Type woning,appartement
-1,Aantal verdiepingen,1
 1,Aantal kamers,4
 1,Aantal slaapkamers,3
-1,Perceeloppervlakte,m²
+1,Type woning,appartement
+1,Status,Onder optie tot 9-4-2025
+1,Servicekosten,€ 0
+1,Borgsom,€ 0
+1,Aantal verdiepingen,1
+1,Perceeloppervlakte,onbekend
 1,Inhoud,336 m³
 1,Oppervlakte buitenruimte,12 m²
