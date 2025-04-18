@@ -2,15 +2,19 @@ from db.models import Property, PropertyFeatureValue, PropertyImage, Agent, Feat
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from scrapy import Spider
+from scrapy_project.items import PropertyItem
 import logging
 
 class PostgresPipeline:
-    def __init__(self):
+    def __init__(self) -> None:
+        """Start database connection."""
         self.engine = create_engine('postgresql://postgres:password@db:5432/scrapy_db')
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
-        
-    def process_item(self, item, spider):
+
+    def process_item(self, item: PropertyItem, spider: Spider) -> PropertyItem:
+        """Store processed item into database."""
         session = self.Session()
         try:
             property = Property(
@@ -22,22 +26,22 @@ class PostgresPipeline:
                 surface_area=item['surface_area'],
             )
             
-            # Add property before features
+            # Add property for features
             session.add(property)
-            session.commit()  # To use property.id for references
+            session.commit()
             
-            # Handling features
+            # Process additional features
             for feature_name, feature_value in item['features'].items():
                 if feature_value.strip():  # Ignore empty values
-                    # Check if feature already exists
+                    # Check for existing features
                     feature = session.query(Feature).filter_by(name=feature_name).first()
                     if not feature:
-                        # If feature doesn't exist, create it
+                        # Create feature if it doesn't exist
                         feature = Feature(name=feature_name)
                         session.add(feature)
-                        session.commit()  # Commit to get feature.id
+                        session.commit()
 
-                    # Add feature's value to PropertyFeatureValue
+                    # Add FeatureValue to PropertyFeatureValue
                     property_feature_value = PropertyFeatureValue(
                         property_id=property.id,
                         feature_id=feature.id,
@@ -45,13 +49,13 @@ class PostgresPipeline:
                     )
                     session.add(property_feature_value)
             
-            # Handling image URLs
+            # Process image(s)
             if item.get('image_urls'):
                 for url in item.get('image_urls', []):
                     image = PropertyImage(url=url, property_id=property.id)
                     session.add(image)
             
-            # Handling agent information
+            # Process agent information
             if item.get('agent_name'):
                 # Check if agent already exists
                 agent = session.query(Agent).filter_by(name=item['agent_name']).first()
@@ -62,12 +66,12 @@ class PostgresPipeline:
                         email=item.get('agent_email', '')
                     )
                     session.add(agent)
-                    session.commit()  # Commit to get agent.id
+                    session.commit()
                     
                 # Assign agent to property
                 property.agent = agent
             
-            # Commit changes to session
+            # Commit all changes
             session.commit()
             
         except IntegrityError as e:
@@ -81,5 +85,5 @@ class PostgresPipeline:
             logging.error(f"Unexpected error: {e}")
         finally:
             session.close()
-            
+        
         return item
